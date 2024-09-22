@@ -1,0 +1,7 @@
+riggs_accessKeys.csv
+venv
+.env
+deets.md
+data/images/*
+__pycache__
+pyrightconfig.json
