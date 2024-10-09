@@ -1,6 +1,9 @@
-# https://docs.getimg.ai/reference/postfluxschnelltexttoimage
 import requests
 
+
+image_sizes = {
+    "post": {"height":1024, "width": 1536}
+}
 class ImageGenerationError(Exception):
     """Custom exception for image generation errors."""
     def __init__(self, status_code, message):
@@ -10,11 +13,11 @@ class ImageGenerationError(Exception):
 
 def generate_image(prompt, config):
     url = "https://api.getimg.ai/v1/flux-schnell/text-to-image"
-
+    # https://docs.getimg.ai/reference/postfluxschnelltexttoimage
     payload = {
         "prompt": prompt,
-        "width": 1024,
-        "height": 1024,
+        "height": image_sizes["post"]["height"],
+        "width": image_sizes["post"]["width"],
         "steps": 4,
         "seed": 0,
         "output_format": "png",
@@ -25,7 +28,6 @@ def generate_image(prompt, config):
         "content-type": "application/json",
         "Authorization": f"Bearer {config.getimg_token}"
     }
-
     response = requests.post(url, json=payload, headers=headers)
     if (response.ok):
         b64_image = response.json()['image']

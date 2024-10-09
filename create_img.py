@@ -1,18 +1,13 @@
 import base64
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
-from generate_img import generate_image, ImageGenerationError
-
-# draw = ImageDraw.Draw(image)
-# _, _, w, h = draw.textbbox((0, 0), message, font=font)
-# draw.text(((W-w)/2, (H-h)/2), message, font=font, fill=fontColor)
+from generate_img import generate_image
 
 def balance_text(text: str):
     split_text = text.split()
     word_count = len(split_text)
     balanced_text = [' '.join(split_text[:word_count//2]),' '.join(split_text[word_count//2:])]
     return balanced_text
-
 
 
 # assuming no more than 45 characters, spaces included
@@ -55,9 +50,13 @@ def decode_b64_image(base64_str: str, output_file_path='', return_image=False):
         return img
 
 def get_prompt(lyric, genre, tags):
-    if tags:
+    if tags and genre:
         return f'image for a {genre} song with these tags: {tags} and with this lyric: {lyric}'
-    return f'image for a {genre} song with this lyric: {lyric}'
+    if genre:
+        return f'image for a {genre} song with this lyric: {lyric}'
+    if tags:
+        return f'image for a song with these tags: {tags} with this lyric: {lyric}'
+    return f'image for a song with this lyric: {lyric}'
 
 def create_img(lyric, genre, tags, config, output_path):
     prompt = get_prompt(lyric, genre, tags)
