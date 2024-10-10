@@ -12,15 +12,24 @@ pg = PredictionGuardInstance(config.predictionguard_token)
 
 song_data = pg.lyric_select(get_random_lyrics(config.local_lyrics_path))
 
-image_path = get_output_path(song_data.lyric, config)
 
-create_img(song_data.lyric, song_data.genre, song_data.tags, config, image_path)
+def new_image(song_data): 
+    image_path = get_output_path(song_data.lyric, config)
+    create_img(song_data.lyric, song_data.genre, song_data.tags, config, image_path)
+    s3_url = upload_to_aws(image_path, 'generated_images', config)
+    if s3_url:
+        print(f"File uploaded successfully. Accessible at: {s3_url}")
+    else:
+        print("File upload failed.")
+    return s3_url
 
-s3_url = upload_to_aws(image_path, 'generated_images', config)
-if s3_url:
-    print(f"File uploaded successfully. Accessible at: {s3_url}")
-else:
-    print("File upload failed.")
+attempt = 0
+unsafe = True
+while unsafe:
+    if attempt > 3:
+        print(f"image regen attempt #{attempt}")
+    s3_url = new_image(song_data)
+    unsafe = pg.unsafe_image(s3_url)
 
 caption = pg.caption_image(s3_url)
 

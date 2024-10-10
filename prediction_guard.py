@@ -30,7 +30,18 @@ prompt_content = {
                 """,
     "caption_image": """ You are a mid thirties classic rock DJ. It is your job to devise a witty and emotionally evocative caption for this image.
                         The caption and image will be posted to social media. A successful caption is one that causes people to like or comment on the post.
-                """
+                        Please write the caption that will accompany the image. Your output will go onto the post verbatim. Please do not output anything except for the caption.
+                """,
+    "mom_ify": """ You are a Facebook-savvy copy editor. It is your job to rewrite image captions that have been flagged as toxic so that they can be enjoyed by moms on Facebook.
+                        Your re-written caption will be posted to social media. A successful caption is one that causes people to like or comment on the post.
+                        Please write a mom-friendly version of the toxic caption. Your output will go onto the post verbatim. Please do not output anything except for the new caption.
+                """,
+    "check_img": """ You are a Facebook-savvy brand representative. It is your job to score images before they are posted to Facebook.
+                        Your score will be input into a system that can only comprehend two values: 0 and 1.
+                        If you believe that the image is inappropriate for a general audience, reply 1. If you believe the image is appropriate, reply 0.
+                        Your output will go into the next system verbatim. Please do not output anything except for the score.
+                """,
+            
 }
 
 class PredictionGuardInstance:
@@ -76,6 +87,36 @@ class PredictionGuardInstance:
                         }
                     ]
                 },
+            ],
+            "mom_ify": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "role": "system",
+                            "content":  prompt_content["mom_ify"]
+                        },
+                        {
+                            "role": "user",
+                            "content": f"{insert}"
+                        }
+                    ]
+                },
+            ],
+            "mom_ify": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "role": "system",
+                            "content":  prompt_content["check_img"]
+                        },
+                        {
+                            "role": "user",
+                            "content": f"{insert}"
+                        }
+                    ]
+                },
             ]
         } 
         return prompts[prompt_key]
@@ -117,9 +158,42 @@ class PredictionGuardInstance:
 
         return songData
     
-    def caption_image(self, img_url):
+    def call_pg(self, model, messages):
+        result = client.chat.completions.create(model=model, messages=messages)
+        raw_output = result['choices'][0]['message']['content']
+        print(json.dumps(
+            result,
+            sort_keys=True,
+            indent=4,
+            separators=(',', ': ')
+        ))
+        return raw_output
+
+    def caption_image(self, img_url, model="llava-1.5-7b-hf"):
         prompt = self._get_prompt("caption_img", img_url)
-        caption = # send request with image
+        
+        attempts = 0
+        caption = self.call_pg(model, prompt)
+        while(not self.mom_approved(caption)):
+            if attempts == 5:
+                prompt = self._get_prompt("mom_ify", img_url)
+            caption = self.call_pg(model, prompt)
+            attempts +=1
+        return caption
+    
+    def mom_approved(self, text, threshold=.6):
+        result = client.toxicity.check(text=text)
+        score = result["checks"][0]["score"]
+        print("toxic test results follow")
+        print(json.dumps(result, sort_keys=True, indent=4, separators=(",", ": ")))
+        return score < threshold
+
+    def unsafe_image(self, img_url, model="llava-1.5-7b-hf"):
+        prompt = self._get_prompt("check_img", img_url)
+        score = self.call_pg(model, prompt)
+        return bool(int(score))
+
+
     
 
 
