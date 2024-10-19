@@ -8,4 +8,4 @@
 
 # Font Credit
 
-NotoSans-Italic.ttf from [open fonts](https://github.com/kiwi0fruit/open-fonts/blob/master/open-fonts/NotoSans-Italic.ttf)
+[WHATDO](https://www.fontspace.com/whatdo-font-f122418) font. Thanks to [Khurasan Studio](https://www.behance.net/khurasan)!

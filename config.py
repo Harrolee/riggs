@@ -10,6 +10,7 @@ riggs_app_id = '896712469175609'
 class AppConfig:
     def __init__(self):
         self.local_image_path = 'data/images'
+        self.local_lyrics_path = 'lyrics'
 
         self.fb_access_token = config['FB_ACCESS_TOKEN']
         self.fb_app_id = riggs_app_id
@@ -18,6 +19,7 @@ class AppConfig:
         self.aws_access_token = config['AWS_ACCESS_TOKEN']
         self.aws_s3_bucket = config['AWS_S3_BUCKET']
         self.getimg_token = config['GETIMG_TOKEN']
+        self.predictionguard_token = config['PREDICTIONGUARD_API_KEY']
 
         if config['TEST'] == 'true':
             self.page_id = testing_page_id

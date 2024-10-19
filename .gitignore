@@ -1,3 +1,5 @@
+.DS_Store
+riggs_deets
 riggs_accessKeys.csv
 venv
 .env
