@@ -1,10 +1,14 @@
 from typing import Callable, TypeVar
 from predictionguard import PredictionGuard
 import traceback
-from pydantic import BaseModel, Field, ValidationError 
+from pydantic import BaseModel, ValidationError 
 from pydantic_core import from_json
-from models import SongData
 import json
+
+class SongData(BaseModel): 
+    lyric: str
+    genre: str
+    tags: list[str]
 
 T = TypeVar("T")
 
@@ -194,45 +198,3 @@ class PredictionGuardInstance:
         prompt = self._get_messages("check_img", img_url)
         score = self.call_pg(model, prompt)
         return bool(int(score))
-
-
-    
-
-
-
-# print(json.dumps(
-#     PredictionGuard_result,
-#     sort_keys=True,
-#     indent=4,
-#     separators=(',', ': ')
-# ))
-
-
-
-
-# import os
-# import json
-# from predictionguard import PredictionGuard
-
-# # Set your Prediction Guard token as an environmental variable.
-# os.environ["PREDICTIONGUARD_API_KEY"] = "<api key>"
-
-# client = PredictionGuard()
-
-# messages = [
-
-# ]
-
-# result = client.chat.completions.create(
-#     model="llava-1.5-7b-hf",
-#     messages=messages
-# )
-
-# print(json.dumps(
-#     result,
-#     sort_keys=True,
-#     indent=4,
-#     separators=(',', ': ')
-# ))
-
-
