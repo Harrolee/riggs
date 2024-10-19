@@ -4,7 +4,7 @@ import traceback
 from pydantic import BaseModel, Field, ValidationError 
 from pydantic_core import from_json
 from models import SongData
-
+import json
 
 T = TypeVar("T")
 
@@ -49,8 +49,8 @@ class PredictionGuardInstance:
     def __init__(self, token):
         self.client = PredictionGuard(api_key=token)
 
-    def _get_prompt(self, prompt_key, insert):
-        prompts = { 
+    def _get_messages(self, prompt_key, insert):
+        messages = { 
             "extract_song_info":[
                 {
                     "role": "system",
@@ -58,7 +58,7 @@ class PredictionGuardInstance:
                 },
                 {
                     "role": "user",
-                    "content": f"{insert}"
+                    "content": insert
                 }
             ],
             "fix_json": [
@@ -68,8 +68,23 @@ class PredictionGuardInstance:
                 },
                 {
                     "role": "user",
-                    "content": f"{insert}"
+                    "content": insert
                 }
+            ],
+            "mom_ify": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "role": "system",
+                            "content":  prompt_content["mom_ify"]
+                        },
+                        {
+                            "role": "user",
+                            "content": insert
+                        }
+                    ]
+                },
             ],
             "caption_img": [
                 {
@@ -82,44 +97,31 @@ class PredictionGuardInstance:
                         {
                             "type": "image_url",
                             "image_url": {
-                                "url": insert,
+                                "url": insert
                             }
                         }
                     ]
                 },
             ],
-            "mom_ify": [
+            "check_img": [
                 {
                     "role": "user",
                     "content": [
                         {
-                            "role": "system",
-                            "content":  prompt_content["mom_ify"]
+                            "type": "text",
+                            "text":  prompt_content["check_img"]
                         },
                         {
-                            "role": "user",
-                            "content": f"{insert}"
-                        }
-                    ]
-                },
-            ],
-            "mom_ify": [
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "role": "system",
-                            "content":  prompt_content["check_img"]
-                        },
-                        {
-                            "role": "user",
-                            "content": f"{insert}"
+                            "type": "image_url",
+                            "image_url": {
+                                "url": insert,
+                            }
                         }
                     ]
                 },
             ]
         } 
-        return prompts[prompt_key]
+        return messages[prompt_key]
 
     def getJsonOutput(self, prompt, validate_output: Callable[[dict], T], model="Hermes-2-Pro-Llama-3-8B",limit=5) -> T:
         fail_count = 0
@@ -147,19 +149,19 @@ class PredictionGuardInstance:
                 print(f"\nEnd Traceback")
 
                 print("Rejecting output and requesting a retry")
-                prompt = self._get_prompt(["fix_json"], f"Malformed json: {json_output}\n\nHow the json is malformed: {errors}")
+                prompt = self._get_messages(["fix_json"], f"Malformed json: {json_output}\n\nHow the json is malformed: {errors}")
         if not output['valid']:
             raise ValueError("Couldn't get the json right, even after 5 attempts")
         return output["content"]
     
     def lyric_select(self, lyrics) -> SongData:
-        prompt = self._get_prompt("extract_song_info", lyrics)
+        prompt = self._get_messages("extract_song_info", lyrics)
         songData = self.getJsonOutput(prompt, SongData.model_validate)
 
         return songData
     
     def call_pg(self, model, messages):
-        result = client.chat.completions.create(model=model, messages=messages)
+        result = self.client.chat.completions.create(model=model, messages=messages)
         raw_output = result['choices'][0]['message']['content']
         print(json.dumps(
             result,
@@ -170,26 +172,26 @@ class PredictionGuardInstance:
         return raw_output
 
     def caption_image(self, img_url, model="llava-1.5-7b-hf"):
-        prompt = self._get_prompt("caption_img", img_url)
+        prompt = self._get_messages("caption_img", img_url)
         
         attempts = 0
         caption = self.call_pg(model, prompt)
         while(not self.mom_approved(caption)):
             if attempts == 5:
-                prompt = self._get_prompt("mom_ify", img_url)
+                prompt = self._get_messages("mom_ify", img_url)
             caption = self.call_pg(model, prompt)
             attempts +=1
         return caption
     
     def mom_approved(self, text, threshold=.6):
-        result = client.toxicity.check(text=text)
+        result = self.client.toxicity.check(text=text)
         score = result["checks"][0]["score"]
         print("toxic test results follow")
         print(json.dumps(result, sort_keys=True, indent=4, separators=(",", ": ")))
         return score < threshold
 
     def unsafe_image(self, img_url, model="llava-1.5-7b-hf"):
-        prompt = self._get_prompt("check_img", img_url)
+        prompt = self._get_messages("check_img", img_url)
         score = self.call_pg(model, prompt)
         return bool(int(score))
 
@@ -208,29 +210,29 @@ class PredictionGuardInstance:
 
 
 
-import os
-import json
-from predictionguard import PredictionGuard
+# import os
+# import json
+# from predictionguard import PredictionGuard
 
-# Set your Prediction Guard token as an environmental variable.
-os.environ["PREDICTIONGUARD_API_KEY"] = "<api key>"
+# # Set your Prediction Guard token as an environmental variable.
+# os.environ["PREDICTIONGUARD_API_KEY"] = "<api key>"
 
-client = PredictionGuard()
+# client = PredictionGuard()
 
-messages = [
+# messages = [
 
-]
+# ]
 
-result = client.chat.completions.create(
-    model="llava-1.5-7b-hf",
-    messages=messages
-)
+# result = client.chat.completions.create(
+#     model="llava-1.5-7b-hf",
+#     messages=messages
+# )
 
-print(json.dumps(
-    result,
-    sort_keys=True,
-    indent=4,
-    separators=(',', ': ')
-))
+# print(json.dumps(
+#     result,
+#     sort_keys=True,
+#     indent=4,
+#     separators=(',', ': ')
+# ))
 
 

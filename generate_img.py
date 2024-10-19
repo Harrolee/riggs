@@ -2,7 +2,10 @@ import requests
 
 
 image_sizes = {
-    "post": {"height":1024, "width": 1536}
+    # https://docs.getimg.ai/reference/postfluxschnelltexttoimage#body-postFluxSchnellTextToImage_width
+    # flux image api max dimension size is 1280
+    # fb post image display ratio is 2/3
+    "post": {"height":768, "width": 1280}
 }
 class ImageGenerationError(Exception):
     """Custom exception for image generation errors."""
@@ -33,4 +36,4 @@ def generate_image(prompt, config):
         b64_image = response.json()['image']
         return b64_image
     else:
-            raise ImageGenerationError(response.status_code, response.text)
+        raise ImageGenerationError(response.status_code, response.text)

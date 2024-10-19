@@ -50,13 +50,14 @@ def decode_b64_image(base64_str: str, output_file_path='', return_image=False):
         return img
 
 def get_prompt(lyric, genre, tags):
+    guard = "Do not add words to the image"
     if tags and genre:
-        return f'image for a {genre} song with these tags: {tags} and with this lyric: {lyric}'
+        return f'image for a {genre} song inspired by these tags: {tags} and by this lyric: {lyric}. {guard}'
     if genre:
-        return f'image for a {genre} song with this lyric: {lyric}'
+        return f'image for a {genre} song inspired by this lyric: {lyric}. {guard}'
     if tags:
-        return f'image for a song with these tags: {tags} with this lyric: {lyric}'
-    return f'image for a song with this lyric: {lyric}'
+        return f'image for a song inspired by these tags: {tags} and by this lyric: {lyric}. {guard}'
+    return f'image for a song inspired by this lyric: {lyric}. {guard}'
 
 def create_img(lyric, genre, tags, config, output_path):
     prompt = get_prompt(lyric, genre, tags)
