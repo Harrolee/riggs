@@ -35,7 +35,7 @@ def safe_image_gen(song_data, threshold=5):
 
 pg = PredictionGuardInstance(config.predictionguard_token)
 song_data = pg.lyric_select(get_random_lyrics(config.local_lyrics_path))
-
+song_data.lyric = song_data.lyric.lower()
 s3_url = safe_image_gen(song_data)
 # caption = pg.caption_image(s3_url) captioning is beyong the ability of llava 1.5
 captions = ["Name this song!", 

@@ -1,5 +1,5 @@
 import requests
-
+import fal_client
 
 image_sizes = {
     # https://docs.getimg.ai/reference/postfluxschnelltexttoimage#body-postFluxSchnellTextToImage_width
@@ -14,7 +14,7 @@ class ImageGenerationError(Exception):
         self.status_code = status_code
         self.message = message
 
-def generate_image(prompt, config):
+def getimg_generate_image(prompt, config):
     url = "https://api.getimg.ai/v1/flux-schnell/text-to-image"
     # https://docs.getimg.ai/reference/postfluxschnelltexttoimage
     payload = {
@@ -37,3 +37,27 @@ def generate_image(prompt, config):
         return b64_image
     else:
         raise ImageGenerationError(response.status_code, response.text)
+
+
+def fal_generate_image(prompt, config):
+
+    def on_queue_update(update):
+        if isinstance(update, fal_client.InProgress):
+            for log in update.logs: # type: ignore
+                print(log["message"])
+
+    result = fal_client.subscribe(
+        "fal-ai/flux/dev",
+        arguments={
+            "prompt": prompt,
+            "image_size": {
+                "height": image_sizes["post"]["height"],
+                "width": image_sizes["post"]["width"],
+            }
+        },
+        with_logs=True,
+        on_queue_update=on_queue_update,
+    )
+    print(result)
+    img = requests.get(result['images'][0]['url']).content
+    return img
