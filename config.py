@@ -17,7 +17,7 @@ class AppConfig:
     def __init__(self):
         self.local_lyrics_path = 'lyrics'
         self.local_image_path = 'data/images'
-
+        Path(self.local_image_path).mkdir(exist_ok=True,parents=True)
         self.fb_access_token = config['FB_ACCESS_TOKEN']
         self.fb_app_id = riggs_app_id
         self.fb_app_secret = config['FB_APP_SECRET']
