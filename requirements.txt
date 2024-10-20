@@ -93,3 +93,4 @@ urllib3
 wcwidth
 webencodings
 yarg
+fal_client

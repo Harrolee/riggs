@@ -11,7 +11,6 @@ from config import AppConfig
 
 config = AppConfig()
 
-
 def get_output_path(lyric):
     out = lyric.replace(' ', '')
     out = out[-10] if len(out) > 10 else out
@@ -22,6 +21,7 @@ def get_output_path(lyric):
 def get_random_lyrics(dir_path):
     files = [f for f in Path(dir_path).rglob('*.txt') if f.is_file()]
     if not files:
+        print("No .txt files found in the directory.")
         return "No .txt files found in the directory."
 
     selected_file = random.choice(files)
@@ -53,7 +53,6 @@ def safe_image_gen(song_data, threshold=5):
         s3_url = new_image(song_data)
         unsafe = pg.unsafe_image(s3_url)
     return s3_url # type: ignore
-
 
 pg = PredictionGuardInstance(config.predictionguard_token)
 song_data = pg.lyric_select(get_random_lyrics(config.local_lyrics_path))
